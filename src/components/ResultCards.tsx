@@ -4,23 +4,25 @@ import { Button } from "@/components/ui/button";
 import type { ProcessedResult } from "@/services/api";
 import { textToSpeech, playAudio } from "@/services/api";
 import { useState, useRef } from "react";
+import { cn } from "@/lib/utils";
 
 interface ResultCardsProps {
   result: ProcessedResult;
   onFollowUp: () => void;
+  className?: string;
 }
 
 const cardVariants = {
-  hidden: { opacity: 0, y: 40, scale: 0.96 },
+  hidden: { opacity: 0, y: 10, scale: 0.98 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { delay: i * 0.2, duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+    transition: { delay: i * 0.1, duration: 0.4, ease: "easeOut" },
   }),
 };
 
-const ResultCards = ({ result, onFollowUp }: ResultCardsProps) => {
+const ResultCards = ({ result, onFollowUp, className }: ResultCardsProps) => {
   const [copied, setCopied] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,7 +57,7 @@ const ResultCards = ({ result, onFollowUp }: ResultCardsProps) => {
       return;
     }
 
-    // Fetch new audio (non-streaming WAV for correct playback)
+    // Fetch new audio (non-streaming WAV)
     try {
       setIsLoading(true);
 
@@ -79,10 +81,10 @@ const ResultCards = ({ result, onFollowUp }: ResultCardsProps) => {
   };
 
   return (
-    <div className="mx-auto mt-10 flex w-full max-w-2xl flex-col gap-6">
+    <div className={cn("flex w-full max-w-2xl flex-col gap-4 mb-8", className)}>
       {/* Insight Card */}
       <motion.div
-        className="glass-card rounded-2xl p-6"
+        className="glass-card rounded-2xl p-5"
         variants={cardVariants}
         initial="hidden"
         animate="visible"

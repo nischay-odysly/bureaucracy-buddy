@@ -1,33 +1,55 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MicButton from "@/components/MicButton";
 import ResultCards from "@/components/ResultCards";
+import { UserMessageBubble } from "@/components/UserMessageBubble";
 import BackgroundDecor from "@/components/BackgroundDecor";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { transcribeAndProcess, sendChatMessage, type ProcessedResult } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Send, Keyboard, Mic } from "lucide-react";
+import { ArrowLeft, Send, Keyboard, Mic, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+type Message =
+  | { role: "user"; content: string }
+  | { role: "assistant"; data: ProcessedResult };
+
 const AppPage = () => {
   const { state, startRecording, stopRecording, reset } = useAudioRecorder();
-  const [result, setResult] = useState<ProcessedResult | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const [inputMode, setInputMode] = useState<"voice" | "text">("voice");
   const [textInput, setTextInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Auto-scroll to bottom
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, state, isSubmitting]);
+
   const handleToggle = async () => {
     if (state === "idle") {
-      setResult(null);
       await startRecording();
     } else if (state === "recording") {
       try {
         const blob = await stopRecording();
-        const data = await transcribeAndProcess(blob);
-        setResult(data);
+        const data = await transcribeAndProcess(blob, conversationId);
+
+        // Add user transcript and bot response
+        setMessages(prev => [
+          ...prev,
+          { role: "user", content: data.transcript },
+          { role: "assistant", data: data }
+        ]);
+
+        if (data.conversation_id) setConversationId(data.conversation_id);
       } catch {
         toast({
           title: "Something went wrong",
@@ -44,85 +66,167 @@ const AppPage = () => {
     e?.preventDefault();
     if (!textInput.trim() || isSubmitting) return;
 
+    const currentText = textInput.trim();
+    setTextInput("");
     setIsSubmitting(true);
-    setResult(null);
+
+    // Optimistic user message
+    setMessages(prev => [...prev, { role: "user", content: currentText }]);
 
     try {
-      const data = await sendChatMessage(textInput.trim());
-      setResult(data);
-      setTextInput("");
+      const data = await sendChatMessage(currentText, conversationId);
+      setMessages(prev => [...prev, { role: "assistant", data: data }]);
+      if (data.conversation_id) setConversationId(data.conversation_id);
+
+      // Auto-switch to text mode preference if user started with text
+      setInputMode("text");
     } catch {
       toast({
         title: "Something went wrong",
         description: "Could not process your message. Please try again.",
         variant: "destructive",
       });
+      // Remove failed message? Or allow retry? For MVP just leave it.
     } finally {
       setIsSubmitting(false);
+      // Focus input again
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   };
 
+  const handleNewChat = () => {
+    setConversationId(undefined);
+    setMessages([]);
+    setTextInput("");
+    toast({
+      title: "New Chat Started",
+      description: "Context has been cleared.",
+    });
+  };
+
+  const handleFollowUp = () => {
+    setInputMode("text");
+    setTimeout(() => inputRef.current?.focus(), 100);
+  };
+
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center px-6 py-12">
+    <div className="relative flex h-screen flex-col items-center overflow-hidden bg-background">
       <BackgroundDecor />
 
-      <Button
-        variant="ghost"
-        className="absolute left-6 top-6 gap-2 text-muted-foreground hover:text-foreground"
-        onClick={() => navigate("/")}
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back
-      </Button>
+      {/* Header */}
+      <div className="z-20 flex w-full items-center justify-between p-4 px-6 md:p-6">
+        <Button
+          variant="ghost"
+          className="gap-2 text-muted-foreground hover:text-foreground"
+          onClick={() => navigate("/")}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
 
-      <div className="relative z-10 flex flex-col items-center w-full max-w-xl">
-        <h1 className="mb-2 text-2xl font-bold text-foreground">
-          What do you need help with?
-        </h1>
-
-        {/* Mode toggle */}
-        <div className="flex gap-2 mb-6">
+        {conversationId && (
           <Button
-            variant={inputMode === "voice" ? "default" : "outline"}
+            variant="outline"
             size="sm"
             className="gap-2"
+            onClick={handleNewChat}
+          >
+            <Plus className="h-4 w-4" />
+            New Chat
+          </Button>
+        )}
+      </div>
+
+      {/* Chat Area */}
+      <div className="flex-1 w-full max-w-2xl flex flex-col overflow-y-auto px-4 pb-4 z-10 scrollbar-hide">
+        {messages.length === 0 && (
+          <div className="flex flex-1 flex-col items-center justify-center text-center opacity-80 mt-10">
+            <h1 className="mb-2 text-2xl font-bold text-foreground">
+              What do you need help with?
+            </h1>
+            <p className="max-w-md text-muted-foreground">
+              Ask about visas, taxes, housing, or any French bureaucracy nightmare.
+            </p>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-6 pt-4">
+          {messages.map((msg, i) => (
+            <div key={i}>
+              {msg.role === "user" ? (
+                <UserMessageBubble text={msg.content} />
+              ) : (
+                <ResultCards
+                  result={msg.data}
+                  onFollowUp={handleFollowUp}
+                  className="mb-2"
+                />
+              )}
+            </div>
+          ))}
+
+          {/* Loading Indicators */}
+          {(state === "processing" || isSubmitting) && (
+            <div className="glass-card w-fit rounded-2xl rounded-tl-sm p-4 animate-pulse">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm">Thinking...</span>
+              </div>
+            </div>
+          )}
+
+          <div ref={scrollRef} className="h-4" />
+        </div>
+      </div>
+
+      {/* Input Area */}
+      <div className="z-20 w-full max-w-2xl px-4 pb-6 pt-2">
+        {/* Mode Toggle */}
+        <div className="mx-auto mb-4 flex w-fit rounded-full border bg-background/50 p-1 backdrop-blur-sm">
+          <Button
+            variant={inputMode === "voice" ? "secondary" : "ghost"}
+            size="sm"
+            className="rounded-full gap-2 px-4"
             onClick={() => setInputMode("voice")}
           >
             <Mic className="h-4 w-4" />
             Voice
           </Button>
           <Button
-            variant={inputMode === "text" ? "default" : "outline"}
+            variant={inputMode === "text" ? "secondary" : "ghost"}
             size="sm"
-            className="gap-2"
-            onClick={() => setInputMode("text")}
+            className="rounded-full gap-2 px-4"
+            onClick={() => {
+              setInputMode("text");
+              setTimeout(() => inputRef.current?.focus(), 100);
+            }}
           >
             <Keyboard className="h-4 w-4" />
             Text
           </Button>
         </div>
 
-        {inputMode === "voice" ? (
-          <>
-            <p className="mb-10 text-muted-foreground text-center">
-              {state === "idle" && "Tap the mic and describe your admin task."}
-              {state === "recording" && "Listening… tap again when you're done."}
-              {state === "processing" && "Thinking…"}
-            </p>
-            <MicButton state={state} onToggle={handleToggle} />
-          </>
-        ) : (
-          <>
-            <p className="mb-6 text-muted-foreground text-center">
-              Type your question about French bureaucracy.
-            </p>
-            <form onSubmit={handleTextSubmit} className="w-full flex gap-3">
+        {/* Dynamic Input */}
+        <div className="min-h-[80px] flex items-end justify-center">
+          {inputMode === "voice" ? (
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-sm text-muted-foreground mb-2">
+                {state === "idle" && "Tap to speak"}
+                {state === "recording" && "Listening..."}
+                {state === "processing" && "Processing..."}
+              </p>
+              <MicButton state={state} onToggle={handleToggle} />
+            </div>
+          ) : (
+            <form onSubmit={handleTextSubmit} className="w-full flex gap-2">
               <Input
+                ref={inputRef}
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
-                placeholder="e.g., How do I cancel my apartment lease in Paris?"
-                className="flex-1"
+                placeholder="Type your question..."
+                className="bg-background/80 backdrop-blur-sm"
                 disabled={isSubmitting}
+                autoFocus
               />
               <Button
                 type="submit"
@@ -130,15 +234,10 @@ const AppPage = () => {
                 className="gap-2"
               >
                 <Send className="h-4 w-4" />
-                {isSubmitting ? "Sending..." : "Send"}
               </Button>
             </form>
-          </>
-        )}
-
-        {result && (
-          <ResultCards result={result} onFollowUp={() => setResult(null)} />
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

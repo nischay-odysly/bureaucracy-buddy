@@ -11,11 +11,15 @@ export interface ProcessedResult {
   conversation_id: string;
 }
 
-export async function transcribeAndProcess(audioBlob: Blob): Promise<ProcessedResult> {
+export async function transcribeAndProcess(
+  audioBlob: Blob,
+  conversationId?: string
+): Promise<ProcessedResult> {
   const formData = new FormData();
   formData.append("audio", audioBlob, "recording.webm");
 
-  const response = await fetch(`${API_BASE}/process-audio`, {
+  const query = conversationId ? `?conversation_id=${conversationId}` : "";
+  const response = await fetch(`${API_BASE}/process-audio${query}`, {
     method: "POST",
     body: formData,
   });
