@@ -1,15 +1,19 @@
 import { motion } from "framer-motion";
-import { Lightbulb, Mail, Send, MessageCircle, Copy, Check, Volume2, VolumeX, RotateCcw, Loader2 } from "lucide-react";
+import { Lightbulb, Mail, Send, MessageCircle, Copy, Check, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ProcessedResult } from "@/services/api";
-import { textToSpeech, playAudio } from "@/services/api";
-import { useState, useRef } from "react";
+import { playAudio } from "@/services/api";
+import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 interface ResultCardsProps {
   result: ProcessedResult;
   onFollowUp: () => void;
   className?: string;
+  // Audio sharing from parent
+  audioBlob?: Blob | null;
+  isAutoPlaying?: boolean;
+  onStopAudio?: () => void;
 }
 
 const cardVariants = {
@@ -22,12 +26,24 @@ const cardVariants = {
   }),
 };
 
-const ResultCards = ({ result, onFollowUp, className }: ResultCardsProps) => {
+const ResultCards = ({
+  result,
+  onFollowUp,
+  className,
+  audioBlob: externalAudioBlob,
+  isAutoPlaying = false,
+  onStopAudio,
+}: ResultCardsProps) => {
   const [copied, setCopied] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Sync with external auto-play state
+  useEffect(() => {
+    if (isAutoPlaying) {
+      setIsPlaying(true);
+    }
+  }, [isAutoPlaying]);
 
   const handleCopy = async () => {
     const text = `Subject: ${result.email_draft.subject}\n\n${result.email_draft.body}`;
@@ -38,46 +54,30 @@ const ResultCards = ({ result, onFollowUp, className }: ResultCardsProps) => {
 
   const handlePlayExplanation = async () => {
     // Stop if already playing
-    if (isPlaying && audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+    if (isPlaying) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current = null;
+      }
+      onStopAudio?.();
       setIsPlaying(false);
       return;
     }
 
-    // Replay from cached audio
-    if (audioBlob) {
+    // Use cached audio blob if available
+    if (externalAudioBlob) {
       setIsPlaying(true);
-      const audio = playAudio(audioBlob);
+      const audio = playAudio(externalAudioBlob);
       audioRef.current = audio;
 
       audio.onended = () => {
         setIsPlaying(false);
+        audioRef.current = null;
       };
-      return;
     }
-
-    // Fetch new audio (non-streaming WAV)
-    try {
-      setIsLoading(true);
-
-      const blob = await textToSpeech(result.explanation, "english_female");
-      setAudioBlob(blob);
-
-      setIsLoading(false);
-      setIsPlaying(true);
-
-      const audio = playAudio(blob);
-      audioRef.current = audio;
-
-      audio.onended = () => {
-        setIsPlaying(false);
-      };
-    } catch (error) {
-      console.error("TTS failed:", error);
-      setIsPlaying(false);
-      setIsLoading(false);
-    }
+    // If no cached audio, the parent should have provided it via auto-play
+    // We don't make a separate request here anymore
   };
 
   return (
@@ -100,32 +100,21 @@ const ResultCards = ({ result, onFollowUp, className }: ResultCardsProps) => {
             </h3>
           </div>
           <div className="flex gap-2">
-            {audioBlob && !isPlaying && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-2"
-                onClick={handlePlayExplanation}
-              >
-                <RotateCcw className="h-4 w-4" />
-                Replay
-              </Button>
-            )}
             <Button
               variant="ghost"
               size="sm"
               className="gap-2"
               onClick={handlePlayExplanation}
-              disabled={isLoading}
+              disabled={!externalAudioBlob && !isPlaying}
             >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : isPlaying ? (
+              {isPlaying ? (
                 <VolumeX className="h-4 w-4" />
-              ) : (
+              ) : externalAudioBlob ? (
                 <Volume2 className="h-4 w-4" />
+              ) : (
+                <Loader2 className="h-4 w-4 animate-spin" />
               )}
-              {isLoading ? "Loading..." : isPlaying ? "Stop" : "Listen"}
+              {isPlaying ? "Stop" : externalAudioBlob ? "Listen" : "Loading..."}
             </Button>
           </div>
         </div>

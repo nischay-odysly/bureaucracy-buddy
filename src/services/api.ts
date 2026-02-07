@@ -115,7 +115,7 @@ export async function textToSpeechStreaming(
 }
 
 // Convert PCM to playable audio (WAV)
-export function pcmToWav(pcmData: ArrayBuffer, sampleRate = 24000, channels = 1): Blob {
+export function pcmToWav(pcmData: ArrayBuffer, sampleRate = 48000, channels = 1): Blob {
   const pcm = new DataView(pcmData);
   const numSamples = pcmData.byteLength / 2; // 16-bit samples
   const wavBuffer = new ArrayBuffer(44 + pcmData.byteLength);
@@ -152,7 +152,10 @@ export function pcmToWav(pcmData: ArrayBuffer, sampleRate = 24000, channels = 1)
 export function playAudio(audioBlob: Blob): HTMLAudioElement {
   const url = URL.createObjectURL(audioBlob);
   const audio = new Audio(url);
-  audio.play();
+
+  audio.play().catch(error => {
+    console.error("Audio playback failed (possibly blocked by browser):", error);
+  });
 
   // Clean up URL after playing
   audio.onended = () => URL.revokeObjectURL(url);

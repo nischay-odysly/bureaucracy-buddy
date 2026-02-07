@@ -7,21 +7,31 @@ import BackgroundDecor from "@/components/BackgroundDecor";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { transcribeAndProcess, sendChatMessage, type ProcessedResult } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Send, Keyboard, Mic, Plus, Loader2 } from "lucide-react";
+import { useAutoPlayTTS } from "@/hooks/useAutoPlayTTS";
+import { ArrowLeft, Send, Keyboard, Mic, Plus, Loader2, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 type Message =
   | { role: "user"; content: string }
-  | { role: "assistant"; data: ProcessedResult };
+  | { role: "assistant"; data: ProcessedResult; audioBlob?: Blob | null };
 
 const AppPage = () => {
   const { state, startRecording, stopRecording, reset } = useAudioRecorder();
+  const {
+    isAutoPlayEnabled,
+    toggleAutoPlay,
+    play,
+    stop,
+    isPlaying: isTTSPlaying,
+    isLoading: isTTSLoading,
+  } = useAutoPlayTTS();
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const [inputMode, setInputMode] = useState<"voice" | "text">("voice");
   const [textInput, setTextInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentPlayingIndex, setCurrentPlayingIndex] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -34,6 +44,14 @@ const AppPage = () => {
     }
   }, [messages, state, isSubmitting]);
 
+  // Stop audio when starting new recording
+  useEffect(() => {
+    if (state === "recording") {
+      stop();
+      setCurrentPlayingIndex(null);
+    }
+  }, [state, stop]);
+
   const handleToggle = async () => {
     if (state === "idle") {
       await startRecording();
@@ -43,13 +61,35 @@ const AppPage = () => {
         const data = await transcribeAndProcess(blob, conversationId);
 
         // Add user transcript and bot response
+        const newIndex = messages.length + 1; // Index of the new assistant message
         setMessages(prev => [
           ...prev,
           { role: "user", content: data.transcript },
-          { role: "assistant", data: data }
+          { role: "assistant", data: data, audioBlob: null }
         ]);
 
         if (data.conversation_id) setConversationId(data.conversation_id);
+
+        // Auto-play if enabled
+        if (isAutoPlayEnabled && data.explanation) {
+          setCurrentPlayingIndex(newIndex);
+          const audioBlob = await play(data.explanation);
+          // Update message with cached audio blob
+          setMessages(prev => prev.map((msg, i) =>
+            i === newIndex && msg.role === "assistant"
+              ? { ...msg, audioBlob }
+              : msg
+          ));
+        } else {
+          // Still fetch audio in background for caching
+          play(data.explanation).then(audioBlob => {
+            setMessages(prev => prev.map((msg, i) =>
+              i === newIndex && msg.role === "assistant"
+                ? { ...msg, audioBlob }
+                : msg
+            ));
+          });
+        }
       } catch {
         toast({
           title: "Something went wrong",
@@ -75,10 +115,32 @@ const AppPage = () => {
 
     try {
       const data = await sendChatMessage(currentText, conversationId);
-      setMessages(prev => [...prev, { role: "assistant", data: data }]);
+      const newIndex = messages.length + 1; // Index of the new assistant message
+
+      setMessages(prev => [...prev, { role: "assistant", data: data, audioBlob: null }]);
+
       if (data.conversation_id) setConversationId(data.conversation_id);
 
-      // Auto-switch to text mode preference if user started with text
+      // Auto-play if enabled
+      if (isAutoPlayEnabled && data.explanation) {
+        setCurrentPlayingIndex(newIndex);
+        const audioBlob = await play(data.explanation);
+        setMessages(prev => prev.map((msg, i) =>
+          i === newIndex && msg.role === "assistant"
+            ? { ...msg, audioBlob }
+            : msg
+        ));
+      } else {
+        // Still fetch audio in background for caching
+        play(data.explanation).then(audioBlob => {
+          setMessages(prev => prev.map((msg, i) =>
+            i === newIndex && msg.role === "assistant"
+              ? { ...msg, audioBlob }
+              : msg
+          ));
+        });
+      }
+
       setInputMode("text");
     } catch {
       toast({
@@ -86,10 +148,8 @@ const AppPage = () => {
         description: "Could not process your message. Please try again.",
         variant: "destructive",
       });
-      // Remove failed message? Or allow retry? For MVP just leave it.
     } finally {
       setIsSubmitting(false);
-      // Focus input again
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   };
@@ -98,6 +158,8 @@ const AppPage = () => {
     setConversationId(undefined);
     setMessages([]);
     setTextInput("");
+    setCurrentPlayingIndex(null);
+    stop();
     toast({
       title: "New Chat Started",
       description: "Context has been cleared.",
@@ -107,6 +169,11 @@ const AppPage = () => {
   const handleFollowUp = () => {
     setInputMode("text");
     setTimeout(() => inputRef.current?.focus(), 100);
+  };
+
+  const handleStopAudio = () => {
+    stop();
+    setCurrentPlayingIndex(null);
   };
 
   return (
@@ -135,6 +202,17 @@ const AppPage = () => {
             New Chat
           </Button>
         )}
+
+        {/* Auto-play Toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="ml-auto mr-2 text-muted-foreground hover:text-foreground"
+          onClick={toggleAutoPlay}
+          title={isAutoPlayEnabled ? "Mute Auto-play" : "Enable Auto-play"}
+        >
+          {isAutoPlayEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+        </Button>
       </div>
 
       {/* Chat Area */}
@@ -160,6 +238,9 @@ const AppPage = () => {
                   result={msg.data}
                   onFollowUp={handleFollowUp}
                   className="mb-2"
+                  audioBlob={msg.audioBlob}
+                  isAutoPlaying={currentPlayingIndex === i && isTTSPlaying}
+                  onStopAudio={handleStopAudio}
                 />
               )}
             </div>
