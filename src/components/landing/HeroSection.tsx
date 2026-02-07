@@ -5,27 +5,20 @@ import { ArrowRight, Sparkles } from "lucide-react";
 const HeroSection = () => {
   return (
     <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 py-24">
-      {/* Animated gradient orbs */}
+      {/* Warm gradient orbs */}
       <div className="pointer-events-none absolute inset-0">
         <div
-          className="absolute left-1/2 top-1/4 h-[500px] w-[500px] -translate-x-1/2 rounded-full opacity-40 blur-[120px]"
+          className="absolute -top-20 right-0 h-[600px] w-[600px] rounded-full opacity-30 blur-[120px]"
           style={{
-            background: "radial-gradient(circle, hsl(239 84% 67% / 0.5), transparent 70%)",
-            animation: "orb-float 8s ease-in-out infinite",
+            background: "radial-gradient(circle, hsl(270 60% 58% / 0.6), transparent 70%)",
+            animation: "orb-float 10s ease-in-out infinite",
           }}
         />
         <div
-          className="absolute right-1/4 top-1/3 h-[350px] w-[350px] rounded-full opacity-30 blur-[100px]"
+          className="absolute bottom-0 left-0 h-[500px] w-[500px] rounded-full opacity-25 blur-[120px]"
           style={{
-            background: "radial-gradient(circle, hsl(263 70% 58% / 0.5), transparent 70%)",
-            animation: "orb-float 10s ease-in-out infinite reverse",
-          }}
-        />
-        <div
-          className="absolute bottom-1/4 left-1/4 h-[300px] w-[300px] rounded-full opacity-20 blur-[100px]"
-          style={{
-            background: "radial-gradient(circle, hsl(239 84% 67% / 0.4), transparent 70%)",
-            animation: "orb-float 12s ease-in-out infinite",
+            background: "radial-gradient(circle, hsl(16 85% 56% / 0.5), transparent 70%)",
+            animation: "orb-float 12s ease-in-out infinite reverse",
           }}
         />
       </div>
@@ -39,7 +32,7 @@ const HeroSection = () => {
           transition={{ duration: 0.6 }}
           className="mb-8"
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-4 py-1.5 text-sm text-muted-foreground backdrop-blur-sm">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-1.5 text-sm text-muted-foreground backdrop-blur-sm">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
             Powered by AI
           </div>
@@ -76,7 +69,7 @@ const HeroSection = () => {
         >
           <Button
             size="lg"
-            className="gradient-primary h-12 rounded-xl px-8 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02]"
+            className="gradient-primary h-12 rounded-full px-8 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02]"
           >
             Try It Free
             <ArrowRight className="ml-1 h-4 w-4" />
@@ -84,12 +77,26 @@ const HeroSection = () => {
           <Button
             variant="ghost"
             size="lg"
-            className="h-12 rounded-xl px-8 text-base text-muted-foreground hover:text-foreground"
+            className="h-12 rounded-full px-8 text-base text-muted-foreground hover:text-foreground"
           >
             See How It Works
           </Button>
         </motion.div>
       </div>
+
+      {/* Colorful bento preview grid */}
+      <motion.div
+        className="relative z-10 mx-auto mt-20 grid max-w-4xl grid-cols-4 grid-rows-2 gap-3"
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.5 }}
+      >
+        <div className="col-span-1 row-span-2 aspect-[3/4] rounded-2xl" style={{ background: "hsl(240 5% 90%)" }} />
+        <div className="col-span-1 row-span-2 aspect-[3/4] rounded-2xl" style={{ background: "hsl(290 60% 85%)" }} />
+        <div className="col-span-1 row-span-2 aspect-[3/4] rounded-2xl" style={{ background: "hsl(36 90% 65%)" }} />
+        <div className="col-span-1 row-span-1 rounded-2xl" style={{ background: "linear-gradient(135deg, hsl(185 70% 50%), hsl(210 60% 40%))" }} />
+        <div className="col-span-1 row-span-1 rounded-2xl" style={{ background: "linear-gradient(135deg, hsl(260 60% 50%), hsl(290 50% 40%))" }} />
+      </motion.div>
     </section>
   );
 };

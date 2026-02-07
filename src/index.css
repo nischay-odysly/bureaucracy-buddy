@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,6 +6,56 @@
 
 @layer base {
   :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 4%;
+
+    --card: 0 0% 98%;
+    --card-foreground: 240 10% 4%;
+
+    --popover: 0 0% 98%;
+    --popover-foreground: 240 10% 4%;
+
+    --primary: 16 85% 56%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 10%;
+
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+
+    --accent: 270 60% 58%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 16 85% 56%;
+
+    --radius: 0.75rem;
+
+    --surface: 240 5% 96%;
+
+    --bento-1: 240 5% 90%;
+    --bento-2: 290 60% 85%;
+    --bento-3: 36 90% 65%;
+    --bento-4: 185 70% 50%;
+    --bento-5: 0 75% 55%;
+    --bento-6: 260 60% 50%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 10% 4%;
+    --sidebar-primary: 16 85% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 5% 96%;
+    --sidebar-accent-foreground: 240 6% 10%;
+    --sidebar-border: 240 6% 90%;
+    --sidebar-ring: 16 85% 56%;
+  }
+
+  .dark {
     --background: 240 6% 4%;
     --foreground: 0 0% 98%;
 
@@ -15,7 +65,7 @@
     --popover: 240 6% 10%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 239 84% 67%;
+    --primary: 16 85% 56%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 240 6% 14%;
@@ -24,7 +74,7 @@
     --muted: 240 5% 16%;
     --muted-foreground: 240 5% 65%;
 
-    --accent: 263 70% 58%;
+    --accent: 270 60% 58%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 55%;
@@ -32,27 +82,25 @@
 
     --border: 240 4% 16%;
     --input: 240 4% 16%;
-    --ring: 239 84% 67%;
-
-    --radius: 0.75rem;
-
-    --glass-bg: 240 6% 10% / 0.5;
-    --glass-border: 240 4% 20% / 0.5;
-    --glass-shadow: 239 84% 67% / 0.08;
-
-    --gradient-start: 239 84% 67%;
-    --gradient-end: 263 70% 58%;
+    --ring: 16 85% 56%;
 
     --surface: 240 6% 10%;
 
+    --bento-1: 210 60% 15%;
+    --bento-2: 290 60% 25%;
+    --bento-3: 36 70% 35%;
+    --bento-4: 185 70% 25%;
+    --bento-5: 0 60% 30%;
+    --bento-6: 260 50% 30%;
+
     --sidebar-background: 240 6% 4%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary: 16 85% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 6% 14%;
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 240 4% 16%;
-    --sidebar-ring: 239 84% 67%;
+    --sidebar-ring: 16 85% 56%;
   }
 }
 
@@ -69,25 +117,22 @@
 
 @layer components {
   .glass-card {
-    background: hsl(var(--glass-bg));
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid hsl(var(--glass-border));
+    @apply bg-card/50 backdrop-blur-xl border border-border/50;
   }
 
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)));
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
   }
 
   .gradient-text {
-    background: linear-gradient(135deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)));
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .bento-card {
-    @apply glass-card rounded-2xl p-6 transition-all duration-300;
+    @apply rounded-2xl p-6 transition-all duration-300 border border-border/50 bg-card;
   }
 
   .bento-card:hover {
@@ -97,15 +142,17 @@
   }
 
   .section-heading {
+    font-family: 'Playfair Display', Georgia, serif;
     font-size: clamp(2rem, 4vw, 3rem);
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: -0.02em;
     line-height: 1.1;
   }
 
   .hero-heading {
-    font-size: clamp(2.5rem, 5vw, 4rem);
-    font-weight: 800;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 900;
     letter-spacing: -0.02em;
     line-height: 1.05;
   }

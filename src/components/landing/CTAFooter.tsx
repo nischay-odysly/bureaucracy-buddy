@@ -5,14 +5,12 @@ import { ArrowRight } from "lucide-react";
 const CTAFooter = () => {
   return (
     <>
-      {/* CTA Section */}
       <section className="relative px-6 py-32">
-        {/* Glow */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div
-            className="h-[400px] w-[600px] rounded-full opacity-20 blur-[120px]"
+            className="h-[400px] w-[600px] rounded-full opacity-15 blur-[120px]"
             style={{
-              background: "radial-gradient(circle, hsl(239 84% 67% / 0.6), transparent 70%)",
+              background: "radial-gradient(circle, hsl(16 85% 56% / 0.6), transparent 70%)",
             }}
           />
         </div>
@@ -32,7 +30,7 @@ const CTAFooter = () => {
           </p>
           <Button
             size="lg"
-            className="gradient-primary h-12 rounded-xl px-8 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02]"
+            className="gradient-primary h-12 rounded-full px-8 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02]"
           >
             Get Started — It's Free
             <ArrowRight className="ml-1 h-4 w-4" />
@@ -40,7 +38,6 @@ const CTAFooter = () => {
         </motion.div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-border px-6 py-8">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-2">
