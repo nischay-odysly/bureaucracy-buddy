@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 py-24">
       {/* Warm gradient orbs */}
@@ -69,6 +72,7 @@ const HeroSection = () => {
         >
           <Button
             size="lg"
+            onClick={() => navigate("/app")}
             className="gradient-primary h-12 rounded-full px-8 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02]"
           >
             Try It Free
