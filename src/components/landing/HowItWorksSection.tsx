@@ -46,10 +46,8 @@ const scenarios = [
     outputType: "coming-soon" as const,
     outputTitle: "More automations coming soon",
     outputContent: [
-      "Calling CAF automatically",
-      "Handling prefecture appointments",
       "Tax declaration assistance",
-      "CPAM reimbursement tracking",
+      "Filling forms for you",
     ],
   },
 ];
