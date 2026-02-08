@@ -1,69 +1,117 @@
 
-
-# Bureaucracy Buddy - Rebrand and Content Update
+# Landing Page Redesign — Premium 2025 AI Startup Aesthetic
 
 ## Overview
-Rename the app from "AdminHero" to "Bureaucracy Buddy", integrate the uploaded logo images, add legal/contact pages, fix interactive elements, and update landing page content to reflect the broader scope (calls + emails).
+Complete redesign of the landing page and app color system to match premium AI startups (Stripe, Linear, Anthropic). Moving from colorful bento-grid template style to a calm, confident, editorial design with generous whitespace and strong typography.
+
+## Design System Changes
+
+### Color System
+- **Background**: Pure white (#FFFFFF) in light mode, deep neutral dark in dark mode
+- **Text**: Near-black (#0A0A0A) headings, neutral gray (#6B7280) body/supporting text
+- **Accent**: Single deep indigo/violet (hsl(250, 50%, 50%)) — used sparingly for CTAs and small highlights only
+- **Remove**: Coral/orange primary, multi-color bento gradients, animated orbs, glassmorphism
+
+### Typography
+- **Headings**: Keep Playfair Display but increase sizing, tighter tracking, bolder weight
+- **Body**: Inter stays, but shift to lighter weight (400) with more line-height for calm readability
+- **Hierarchy**: Much larger headline sizes (clamp 3rem to 5rem), smaller subdued supporting text
+
+### Spacing
+- Generous vertical padding (py-32 to py-40 between sections)
+- More whitespace around text blocks
+- No visual clutter between sections
 
 ---
 
-## Changes
+## Section-by-Section Changes
 
-### 1. Add Logo Assets
-- Copy `image-2.png` (logo with text) to `src/assets/logo-full.png`
-- Copy `image-3.png` (icon only) to `src/assets/logo-icon.png`
-- Use the full logo in the Hero section header area and footer
-- Use the icon-only version as favicon and smaller branding spots
+### Section 1 — Hero (HeroSection.tsx)
+- **Remove**: Animated gradient orbs, "Powered by AI" badge, colorful bento preview grid at bottom
+- **Keep**: Logo image at top
+- **New headline**: "Stop struggling with French bureaucracy."
+- **New subheadline**: "Just speak. Bureaucracy Buddy handles the rest."
+- **Supporting line**: "From confusion to resolution in seconds."
+- **Layout**: Centered, generous vertical spacing, large headline (5rem+), calm supporting text
+- **CTA**: Single primary button "Get Started" in the new indigo accent, plus a subtle ghost "See How It Works" link
+- **Background**: Clean white, no orbs or decorations
 
-### 2. Rename to "Bureaucracy Buddy"
-Update all references from "AdminHero" to "Bureaucracy Buddy":
-- `index.html` -- title, meta tags, OG tags, twitter tags
-- `HeroSection.tsx` -- badge area, any text references
-- `CTAFooter.tsx` -- footer brand name, copyright
-- `PainPointsSection.tsx` -- any mentions
-- `AppPage.tsx` -- any title/header references
+### Section 2 — How It Works (HowItWorksSection.tsx)
+- **Remove**: Heavy circular icon containers with gradient backgrounds, bordered step numbers
+- **New layout**: Horizontal 3-column flow with thin connecting line
+- **Each step**: Small minimal stroke icon (24px), title below, one-line description
+- **Steps**: Speak / Understand / Act (keep content, refine descriptions to be shorter)
+- **No cards, no boxes** — just icon, text, and whitespace
+- **Section header**: Remove or simplify to just "How it works" in smaller, understated text
 
-### 3. "See How It Works" Smooth Scroll
-- In `HeroSection.tsx`, make the "See How It Works" button scroll to the HowItWorksSection
-- Add an `id="how-it-works"` to the HowItWorksSection wrapper
-- Use `document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })` on click
+### Section 3 — Capability Statement (replaces BentoFeaturesSection.tsx)
+- **Remove**: Entire bento grid with colored accent bars and hover effects
+- **Replace with**: Single powerful statement block
+- **Headline**: "Voice-first AI that turns speech into action."
+- **Supporting paragraph**: Brief description of multilingual support, document drafting, phone calls, and legal context
+- **Layout**: Centered text block, or left-aligned with generous whitespace
+- **Optional**: Beneath the statement, 4 minimal inline capabilities listed horizontally (icon + label only, no cards): Multilingual / Instant Drafts / Legal Context / Voice-First
 
-### 4. Update Step 03 in HowItWorksSection
-Current: "Act" -- "Get a perfectly formatted French letter or email, ready to send immediately."
-Updated: "Act" -- "Get a drafted email, a phone call made on your behalf, or step-by-step guidance -- whatever it takes to resolve your issue." (Use a more general action icon like `CheckCircle` or `Rocket`)
-
-### 5. Update "Multilingual" Feature in BentoFeaturesSection
-Current: "Speak in English, Arabic, Spanish, or any language. Get flawless French output every time."
-Updated: "Speak in English, Arabic, Spanish, or any language. We understand you and communicate with French administration on your behalf."
-
-### 6. Create Templated Legal Pages
-Create three new page components:
-- **`src/pages/PrivacyPage.tsx`** -- Standard privacy policy template for Bureaucracy Buddy
-- **`src/pages/TermsPage.tsx`** -- Standard terms of service template
-- **`src/pages/ContactPage.tsx`** -- Contact page with email nishuastic@gmail.com and a simple contact form UI
-
-### 7. Add Routes and Wire Footer Links
-- Add `/privacy`, `/terms`, `/contact` routes in `App.tsx`
-- Update footer links in `CTAFooter.tsx` to use `react-router-dom` `Link` components pointing to these routes
-- Also wire the CTA "Get Started" button to navigate to `/app`
+### Section 4 — CTA Footer (CTAFooter.tsx)
+- **Simplify**: Remove gradient orb background
+- **Keep**: "Ready to simplify your admin?" headline, CTA button, footer links
+- **Restyle**: Button in new indigo accent, cleaner footer layout
 
 ---
 
-## Technical Details
+## CSS / Tailwind Changes (index.css + tailwind.config.ts)
 
-**Files to create:**
-- `src/assets/logo-full.png` (copied from upload)
-- `src/assets/logo-icon.png` (copied from upload)
-- `src/pages/PrivacyPage.tsx`
-- `src/pages/TermsPage.tsx`
-- `src/pages/ContactPage.tsx`
+### CSS Variables (index.css)
+- Update `--primary` from coral (16 85% 56%) to deep indigo (250 50% 50%)
+- Update `--accent` to a softer violet complement
+- Update `--ring` to match new primary
+- Remove bento color variables (--bento-1 through --bento-6)
+- Simplify `.gradient-primary` to a subtle indigo gradient or solid color
+- Update `.gradient-text` to use indigo tones
+- Remove `.glass-card` class (or simplify to plain card)
+- Remove `orb-float` and `gradient-shift` keyframes
+- Update `.section-heading` and `.hero-heading` sizing for larger, more editorial feel
 
-**Files to modify:**
-- `index.html` -- title and meta tags
-- `src/App.tsx` -- add 3 new routes
-- `src/components/landing/HeroSection.tsx` -- logo, smooth scroll, rename
-- `src/components/landing/HowItWorksSection.tsx` -- update step 03 text and icon, add section id
-- `src/components/landing/BentoFeaturesSection.tsx` -- update Multilingual description
-- `src/components/landing/CTAFooter.tsx` -- logo, rename, Link components, wire CTA button
-- `src/pages/AppPage.tsx` -- rename references
+### Dark Mode
+- Update dark mode variables to complement the new indigo palette
+- Darker, more neutral background (keep 240 6% 4% or shift slightly)
 
+---
+
+## App Page Color Sync (AppPage.tsx, MicButton.tsx, BackgroundDecor.tsx)
+
+### BackgroundDecor.tsx
+- Tone down to very subtle, single-color soft glow or remove entirely
+- Use the new indigo at very low opacity if kept
+
+### MicButton.tsx
+- Update `gradient-primary` usage — will automatically pick up new indigo primary
+- Recording state (destructive red) stays the same
+
+### AppPage.tsx
+- No structural changes needed — colors will cascade from CSS variable updates
+- The glass-card loading indicator will inherit the cleaner styling
+
+---
+
+## Files Modified
+
+| File | Change |
+|------|--------|
+| `src/index.css` | New color variables, remove bento vars, update gradient classes, remove orb keyframes, update typography sizing |
+| `tailwind.config.ts` | Update any hardcoded color references if present |
+| `src/components/landing/HeroSection.tsx` | Full rewrite — new copy, remove orbs/badge/bento grid, clean layout |
+| `src/components/landing/PainPointsSection.tsx` | Remove entirely (merged into capability section) |
+| `src/components/landing/HowItWorksSection.tsx` | Simplify to minimal horizontal timeline, remove heavy icon containers |
+| `src/components/landing/BentoFeaturesSection.tsx` | Replace with single capability statement section |
+| `src/components/landing/CTAFooter.tsx` | Remove gradient orb, update button color |
+| `src/pages/Index.tsx` | Remove PainPointsSection import, update section order |
+| `src/components/BackgroundDecor.tsx` | Simplify to very subtle single glow |
+
+## What Stays the Same
+- Routing structure and page architecture
+- AppPage functionality (voice/text/call)
+- Legal pages (Privacy, Terms, Contact)
+- Framer Motion for subtle entrance animations (but toned down)
+- Logo images
+- Footer links and navigation
