@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Mic, Lightbulb, Send } from "lucide-react";
+import { Mic, Lightbulb, Rocket } from "lucide-react";
 
 const steps = [
   {
@@ -15,16 +15,16 @@ const steps = [
     description: "AI analyzes your situation, identifies the right procedure, and explains it clearly.",
   },
   {
-    icon: Send,
+    icon: Rocket,
     step: "03",
     title: "Act",
-    description: "Get a perfectly formatted French letter or email, ready to send immediately.",
+    description: "Get a drafted email, a phone call made on your behalf, or step-by-step guidance — whatever it takes to resolve your issue.",
   },
 ];
 
 const HowItWorksSection = () => {
   return (
-    <section className="relative px-6 py-24">
+    <section id="how-it-works" className="relative px-6 py-24">
       <div className="mx-auto max-w-5xl">
         <motion.div
           className="mb-16 text-center"

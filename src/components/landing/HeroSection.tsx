@@ -2,9 +2,14 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
+import logoFull from "@/assets/logo-full.png";
 
 const HeroSection = () => {
   const navigate = useNavigate();
+
+  const scrollToHowItWorks = () => {
+    document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
     <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 py-24">
@@ -28,11 +33,21 @@ const HeroSection = () => {
 
       {/* Content */}
       <div className="relative z-10 flex max-w-4xl flex-col items-center text-center">
-        {/* Badge */}
+        {/* Logo */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
+          className="mb-8"
+        >
+          <img src={logoFull} alt="Bureaucracy Buddy" className="h-12 md:h-14" />
+        </motion.div>
+
+        {/* Badge */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.05 }}
           className="mb-8"
         >
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-1.5 text-sm text-muted-foreground backdrop-blur-sm">
@@ -82,6 +97,7 @@ const HeroSection = () => {
             variant="ghost"
             size="lg"
             className="h-12 rounded-full px-8 text-base text-muted-foreground hover:text-foreground"
+            onClick={scrollToHowItWorks}
           >
             See How It Works
           </Button>

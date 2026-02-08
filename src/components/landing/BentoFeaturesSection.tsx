@@ -5,7 +5,7 @@ const features = [
   {
     icon: Globe,
     title: "Multilingual",
-    description: "Speak in English, Arabic, Spanish, or any language. Get flawless French output every time.",
+    description: "Speak in English, Arabic, Spanish, or any language. We understand you and communicate with French administration on your behalf.",
     span: "md:col-span-2",
     gradient: "linear-gradient(135deg, hsl(290 60% 85%), hsl(260 50% 75%))",
   },
