@@ -110,8 +110,9 @@ const HowItWorksSection = () => {
           {scenarios.map((_, i) => (
             <div key={i} className="h-0.5 flex-1 overflow-hidden rounded-full bg-border">
               <motion.div
+                key={`${i}-${activeIndex}`}
                 className="h-full bg-primary/60"
-                initial={{ width: "0%" }}
+                initial={{ width: i < activeIndex ? "100%" : "0%" }}
                 animate={{
                   width: i === activeIndex ? "100%" : i < activeIndex ? "100%" : "0%",
                 }}
