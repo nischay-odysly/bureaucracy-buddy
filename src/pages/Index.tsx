@@ -1,16 +1,14 @@
 import HeroSection from "@/components/landing/HeroSection";
-import PainPointsSection from "@/components/landing/PainPointsSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
-import BentoFeaturesSection from "@/components/landing/BentoFeaturesSection";
+import CapabilitySection from "@/components/landing/BentoFeaturesSection";
 import CTAFooter from "@/components/landing/CTAFooter";
 
 const Index = () => {
   return (
-    <main className="relative overflow-hidden">
+    <main className="relative">
       <HeroSection />
-      <PainPointsSection />
       <HowItWorksSection />
-      <BentoFeaturesSection />
+      <CapabilitySection />
       <CTAFooter />
     </main>
   );
