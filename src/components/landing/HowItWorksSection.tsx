@@ -4,74 +4,56 @@ import { Mic, Lightbulb, Rocket } from "lucide-react";
 const steps = [
   {
     icon: Mic,
-    step: "01",
     title: "Speak",
-    description: "Describe your admin problem in any language — just talk naturally.",
+    description: "Describe your problem in any language.",
   },
   {
     icon: Lightbulb,
-    step: "02",
     title: "Understand",
-    description: "AI analyzes your situation, identifies the right procedure, and explains it clearly.",
+    description: "AI identifies the right procedure instantly.",
   },
   {
     icon: Rocket,
-    step: "03",
     title: "Act",
-    description: "Get a drafted email, a phone call made on your behalf, or step-by-step guidance — whatever it takes to resolve your issue.",
+    description: "Get a drafted email, phone call, or step-by-step guidance.",
   },
 ];
 
 const HowItWorksSection = () => {
   return (
-    <section id="how-it-works" className="relative px-6 py-24">
-      <div className="mx-auto max-w-5xl">
-        <motion.div
-          className="mb-16 text-center"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+    <section id="how-it-works" className="px-6 py-32">
+      <div className="mx-auto max-w-4xl">
+        <motion.p
+          className="mb-16 text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="section-heading mb-4 text-foreground">
-            Three steps. Zero stress.
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            From confusion to resolution in under a minute.
-          </p>
-        </motion.div>
+          How it works
+        </motion.p>
 
-        <div className="relative grid gap-8 md:grid-cols-3">
+        <div className="relative grid gap-16 md:grid-cols-3 md:gap-8">
           {/* Connecting line */}
-          <div className="absolute left-0 right-0 top-[52px] hidden h-px bg-gradient-to-r from-transparent via-border to-transparent md:block" />
+          <div className="absolute left-0 right-0 top-3 hidden h-px bg-border md:block" />
 
           {steps.map((s, i) => (
             <motion.div
               key={s.title}
               className="relative flex flex-col items-center text-center"
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.5, delay: i * 0.15 }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
             >
-              {/* Icon circle */}
-              <div className="relative z-10 mb-6 flex h-[104px] w-[104px] items-center justify-center">
-                <div className="absolute inset-0 rounded-full bg-secondary" />
-                <div className="absolute inset-[2px] rounded-full bg-background" />
-                <div className="relative flex h-12 w-12 items-center justify-center rounded-full gradient-primary shadow-lg shadow-primary/20">
-                  <s.icon className="h-5 w-5 text-primary-foreground" />
-                </div>
+              <div className="relative z-10 mb-6 flex h-6 w-6 items-center justify-center">
+                <s.icon className="h-5 w-5 text-foreground" strokeWidth={1.5} />
               </div>
 
-              {/* Step number */}
-              <span className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary">
-                Step {s.step}
-              </span>
-
-              <h3 className="mb-2 text-xl font-semibold text-foreground">
+              <h3 className="mb-2 text-lg font-semibold text-foreground">
                 {s.title}
               </h3>
-              <p className="max-w-[280px] text-sm leading-relaxed text-muted-foreground">
+              <p className="max-w-[240px] text-sm leading-relaxed text-muted-foreground">
                 {s.description}
               </p>
             </motion.div>
