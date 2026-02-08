@@ -37,7 +37,7 @@ const CTAFooter = () => {
       <footer className="border-t border-border px-6 py-8">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-2">
-            <img src={logoIcon} alt="Bureaucracy Buddy" className="h-6 w-6 rounded-md" />
+            <img src={logoIcon} alt="Bureaucracy Buddy" className="h-6 w-auto rounded-md" />
             <span className="text-sm font-medium text-foreground">Bureaucracy Buddy</span>
           </div>
 

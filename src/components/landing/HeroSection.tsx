@@ -21,7 +21,7 @@ const HeroSection = () => {
           transition={{ duration: 0.8 }}
           className="mb-16"
         >
-          <img src={logoFull} alt="Bureaucracy Buddy" className="h-10" />
+          <img src={logoFull} alt="Bureaucracy Buddy" className="h-10 w-auto" />
         </motion.div>
 
         {/* Headline */}
