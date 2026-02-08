@@ -1,5 +1,6 @@
-import { useState, useRef, useCallback } from "react";
-import { textToSpeech, playAudio, type VoiceType } from "@/services/api";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { textToSpeechChunked, type VoiceType } from "@/services/api";
+import { TTSPlayer } from "@/utils/TTSPlayer";
 
 const STORAGE_KEY = "bureaucracy_buddy_autoplay";
 
@@ -12,59 +13,60 @@ export function useAutoPlayTTS() {
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-    // Cache: text -> audio blob
-    const cacheRef = useRef<Map<string, Blob>>(new Map());
 
-    const stop = useCallback(() => {
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-            audioRef.current = null;
-        }
-        setIsPlaying(false);
+    // Use a ref to keep track of the player instance
+    const playerRef = useRef<TTSPlayer | null>(null);
+
+    // Initialize player on mount/unmount
+    useEffect(() => {
+        // Initialize player
+        playerRef.current = new TTSPlayer(
+            () => {
+                // onPlaybackEnd
+                setIsPlaying(false);
+            },
+            (error) => {
+                // onError
+                console.error("TTS output error", error);
+                setIsPlaying(false);
+                setIsLoading(false);
+            }
+        );
+
+        return () => {
+            playerRef.current?.stop();
+        };
     }, []);
 
-    const play = useCallback(async (text: string, voice: VoiceType = "english_female"): Promise<Blob | null> => {
+    const stop = useCallback(() => {
+        playerRef.current?.stop();
+        setIsPlaying(false);
+        setIsLoading(false);
+    }, []);
+
+    const play = useCallback(async (text: string, voice: VoiceType = "english_female") => {
+        // Stop any current playback
         stop();
 
-        if (!text) return null;
+        if (!text) return;
 
         try {
             setIsLoading(true);
+            setIsPlaying(true); // Optimistically set playing
 
-            // Check cache first
-            let blob = cacheRef.current.get(text);
+            // Start streaming request
+            const response = await textToSpeechChunked(text, voice);
 
-            if (!blob) {
-                // Fetch from API (non-streaming for reliability)
-                blob = await textToSpeech(text, voice);
-                cacheRef.current.set(text, blob);
+            setIsLoading(false); // Valid response received, now playing/buffering
+
+            // Hand over to player
+            if (playerRef.current) {
+                await playerRef.current.playStream(response);
             }
-
-            setIsLoading(false);
-            setIsPlaying(true);
-
-            const audio = playAudio(blob);
-            audioRef.current = audio;
-
-            audio.onended = () => {
-                setIsPlaying(false);
-                audioRef.current = null;
-            };
-
-            audio.onerror = () => {
-                console.error("Audio playback error");
-                setIsPlaying(false);
-                audioRef.current = null;
-            };
-
-            return blob;
         } catch (error) {
             console.error("TTS failed:", error);
             setIsLoading(false);
             setIsPlaying(false);
-            return null;
         }
     }, [stop]);
 
@@ -76,16 +78,6 @@ export function useAutoPlayTTS() {
         });
     }, []);
 
-    // Get cached blob for a text (for sharing with ResultCards)
-    const getCachedBlob = useCallback((text: string): Blob | null => {
-        return cacheRef.current.get(text) || null;
-    }, []);
-
-    // Set a blob in cache (e.g., if ResultCards fetches it first)
-    const setCachedBlob = useCallback((text: string, blob: Blob) => {
-        cacheRef.current.set(text, blob);
-    }, []);
-
     return {
         isAutoPlayEnabled,
         toggleAutoPlay,
@@ -93,7 +85,5 @@ export function useAutoPlayTTS() {
         isLoading,
         play,
         stop,
-        getCachedBlob,
-        setCachedBlob,
     };
 }

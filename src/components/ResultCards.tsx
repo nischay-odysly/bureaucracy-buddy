@@ -14,6 +14,7 @@ interface ResultCardsProps {
   audioBlob?: Blob | null;
   isAutoPlaying?: boolean;
   onStopAudio?: () => void;
+  onPlay?: () => void;
 }
 
 const cardVariants = {
@@ -22,7 +23,7 @@ const cardVariants = {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { delay: i * 0.1, duration: 0.4, ease: "easeOut" },
+    transition: { delay: i * 0.1, duration: 0.4 },
   }),
 };
 
@@ -33,6 +34,7 @@ const ResultCards = ({
   audioBlob: externalAudioBlob,
   isAutoPlaying = false,
   onStopAudio,
+  onPlay,
 }: ResultCardsProps) => {
   const [copied, setCopied] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -42,6 +44,9 @@ const ResultCards = ({
   useEffect(() => {
     if (isAutoPlaying) {
       setIsPlaying(true);
+    } else if (!isAutoPlaying && !audioRef.current) {
+      // Only turn off if not playing local blob
+      setIsPlaying(false);
     }
   }, [isAutoPlaying]);
 
@@ -75,9 +80,10 @@ const ResultCards = ({
         setIsPlaying(false);
         audioRef.current = null;
       };
+    } else if (onPlay) {
+      // Trigger parent streaming
+      onPlay();
     }
-    // If no cached audio, the parent should have provided it via auto-play
-    // We don't make a separate request here anymore
   };
 
   return (
@@ -105,16 +111,16 @@ const ResultCards = ({
               size="sm"
               className="gap-2"
               onClick={handlePlayExplanation}
-              disabled={!externalAudioBlob && !isPlaying}
+              disabled={!externalAudioBlob && !isPlaying && !onPlay}
             >
               {isPlaying ? (
                 <VolumeX className="h-4 w-4" />
-              ) : externalAudioBlob ? (
+              ) : (externalAudioBlob || onPlay) ? (
                 <Volume2 className="h-4 w-4" />
               ) : (
                 <Loader2 className="h-4 w-4 animate-spin" />
               )}
-              {isPlaying ? "Stop" : externalAudioBlob ? "Listen" : "Loading..."}
+              {isPlaying ? "Stop" : (externalAudioBlob || onPlay) ? "Listen" : "Loading..."}
             </Button>
           </div>
         </div>

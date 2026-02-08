@@ -1,16 +1,23 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import MicButton from "@/components/MicButton";
 import ResultCards from "@/components/ResultCards";
 import { UserMessageBubble } from "@/components/UserMessageBubble";
 import BackgroundDecor from "@/components/BackgroundDecor";
+import LiveCallUI from "@/components/LiveCallUI";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
-import { transcribeAndProcess, sendChatMessage, type ProcessedResult } from "@/services/api";
+import { transcribeAndProcess, sendChatMessage, getConversation, type ProcessedResult, type ConversationMessage } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { useAutoPlayTTS } from "@/hooks/useAutoPlayTTS";
-import { ArrowLeft, Send, Keyboard, Mic, Plus, Loader2, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, Send, Keyboard, Mic, Plus, Loader2, Volume2, VolumeX, Phone, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type Message =
   | { role: "user"; content: string }
@@ -36,6 +43,70 @@ const AppPage = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [showCallDialog, setShowCallDialog] = useState(false);
+  const [agentCallId, setAgentCallId] = useState<string | null>(null);
+  const [agentCallTarget, setAgentCallTarget] = useState<string>("caf");
+
+  /**
+   * Check if response contains a call action and handle it
+   */
+  const handleCallAction = (data: ProcessedResult) => {
+    if (data.call_action?.call_id) {
+
+      setAgentCallId(data.call_action.call_id);
+      setAgentCallTarget(data.call_action.target || "caf");
+      setShowCallDialog(true);
+    }
+  };
+
+  const location = useLocation();
+
+  // Load conversation from history if ID is passed
+  useEffect(() => {
+    const loadHistory = async () => {
+      const historyId = location.state?.conversationId;
+      if (historyId) {
+        try {
+          // Clear previous state first
+          setMessages([]);
+          setConversationId(historyId);
+
+          const data = await getConversation(historyId);
+
+          if (data.messages && Array.isArray(data.messages)) {
+            // Map backend messages to frontend format
+            const mappedMessages: Message[] = data.messages.map((msg: ConversationMessage) => {
+              if (msg.role === "user") {
+                return { role: "user", content: msg.content };
+              } else {
+                return {
+                  role: "assistant",
+                  data: {
+                    transcript: "", // No transcript for historical assistant messages
+                    explanation: msg.content,
+                    email_draft: msg.metadata?.email_draft || { subject: "", body: "", recipient: "" },
+                    call_action: msg.metadata?.call_action,
+                    conversation_id: historyId
+                  },
+                  audioBlob: null
+                };
+              }
+            });
+            setMessages(mappedMessages);
+          }
+        } catch (error) {
+          console.error("Failed to load conversation history:", error);
+          toast({
+            title: "Error",
+            description: "Could not load chat history.",
+            variant: "destructive"
+          });
+        }
+      }
+    };
+
+    loadHistory();
+  }, [location.state, toast]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -70,25 +141,13 @@ const AppPage = () => {
 
         if (data.conversation_id) setConversationId(data.conversation_id);
 
+        // Check for agent-initiated call
+        handleCallAction(data);
+
         // Auto-play if enabled
         if (isAutoPlayEnabled && data.explanation) {
           setCurrentPlayingIndex(newIndex);
-          const audioBlob = await play(data.explanation);
-          // Update message with cached audio blob
-          setMessages(prev => prev.map((msg, i) =>
-            i === newIndex && msg.role === "assistant"
-              ? { ...msg, audioBlob }
-              : msg
-          ));
-        } else {
-          // Still fetch audio in background for caching
-          play(data.explanation).then(audioBlob => {
-            setMessages(prev => prev.map((msg, i) =>
-              i === newIndex && msg.role === "assistant"
-                ? { ...msg, audioBlob }
-                : msg
-            ));
-          });
+          play(data.explanation);
         }
       } catch {
         toast({
@@ -121,24 +180,13 @@ const AppPage = () => {
 
       if (data.conversation_id) setConversationId(data.conversation_id);
 
+      // Check for agent-initiated call
+      handleCallAction(data);
+
       // Auto-play if enabled
       if (isAutoPlayEnabled && data.explanation) {
         setCurrentPlayingIndex(newIndex);
-        const audioBlob = await play(data.explanation);
-        setMessages(prev => prev.map((msg, i) =>
-          i === newIndex && msg.role === "assistant"
-            ? { ...msg, audioBlob }
-            : msg
-        ));
-      } else {
-        // Still fetch audio in background for caching
-        play(data.explanation).then(audioBlob => {
-          setMessages(prev => prev.map((msg, i) =>
-            i === newIndex && msg.role === "assistant"
-              ? { ...msg, audioBlob }
-              : msg
-          ));
-        });
+        play(data.explanation);
       }
 
       setInputMode("text");
@@ -182,14 +230,24 @@ const AppPage = () => {
 
       {/* Header */}
       <div className="z-20 flex w-full items-center justify-between p-4 px-6 md:p-6">
-        <Button
-          variant="ghost"
-          className="gap-2 text-muted-foreground hover:text-foreground"
-          onClick={() => navigate("/")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            className="gap-2 text-muted-foreground hover:text-foreground"
+            onClick={() => navigate("/")}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+          <Button
+            variant="ghost"
+            className="gap-2 text-muted-foreground hover:text-foreground"
+            onClick={() => navigate("/app/history")}
+          >
+            <RotateCcw className="h-4 w-4" />
+            History
+          </Button>
+        </div>
 
         {conversationId && (
           <Button
@@ -241,6 +299,10 @@ const AppPage = () => {
                   audioBlob={msg.audioBlob}
                   isAutoPlaying={currentPlayingIndex === i && isTTSPlaying}
                   onStopAudio={handleStopAudio}
+                  onPlay={() => {
+                    setCurrentPlayingIndex(i);
+                    play(msg.data.explanation);
+                  }}
                 />
               )}
             </div>
@@ -285,6 +347,15 @@ const AppPage = () => {
             <Keyboard className="h-4 w-4" />
             Text
           </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-full gap-2 px-4"
+            onClick={() => setShowCallDialog(true)}
+          >
+            <Phone className="h-4 w-4" />
+            Call
+          </Button>
         </div>
 
         {/* Dynamic Input */}
@@ -320,6 +391,26 @@ const AppPage = () => {
           )}
         </div>
       </div>
+
+      {/* Call Dialog */}
+      <Dialog open={showCallDialog} onOpenChange={(open) => {
+        setShowCallDialog(open);
+        if (!open) {
+          // Reset agent call state when closing
+          setAgentCallId(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-[500px] p-0 border-none bg-transparent">
+          <LiveCallUI
+            onClose={() => {
+              setShowCallDialog(false);
+              setAgentCallId(null);
+            }}
+            agentCallId={agentCallId || undefined}
+            agentTarget={agentCallTarget}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

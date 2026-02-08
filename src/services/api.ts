@@ -1,14 +1,38 @@
 const API_BASE = "http://localhost:8000/api/v1/agent";
 
+export interface EmailDraft {
+  subject: string;
+  body: string;
+  recipient: string;
+}
+
+export interface CallAction {
+  call_id: string;
+  target: string;
+  status: string;
+}
+
 export interface ProcessedResult {
   transcript: string;
   explanation: string;
-  email_draft: {
-    subject: string;
-    body: string;
-    recipient: string;
-  };
+  email_draft: EmailDraft;
   conversation_id: string;
+  // Agent-initiated call action
+  call_action?: CallAction;
+}
+
+export interface ConversationMessage {
+  role: "user" | "assistant";
+  content: string;
+  metadata?: {
+    email_draft?: EmailDraft;
+    call_action?: CallAction;
+  };
+}
+
+export interface Conversation {
+  id: string;
+  messages: ConversationMessage[];
 }
 
 export async function transcribeAndProcess(
@@ -174,4 +198,36 @@ export async function streamAndPlayTTS(
   const audio = playAudio(wavBlob);
 
   return { audio, blob: wavBlob };
+}
+
+// Chunked TTS Streaming (returns Response stream for TTSPlayer)
+export async function textToSpeechChunked(
+  text: string,
+  voice: VoiceType = "english_female"
+): Promise<Response> {
+  const response = await fetch(`${API_BASE}/tts/chunked`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text, voice }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`TTS chunked error: ${response.status}`);
+  }
+
+  return response;
+}
+
+// Fetch full conversation history
+export async function getConversation(id: string): Promise<Conversation> {
+  // Note: uses the conversations endpoint, not the agent endpoint
+  const response = await fetch(`http://localhost:8000/api/v1/conversations/${id}`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch conversation: ${response.status}`);
+  }
+
+  return response.json();
 }
